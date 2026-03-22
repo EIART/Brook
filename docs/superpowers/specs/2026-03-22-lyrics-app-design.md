@@ -24,9 +24,11 @@ The app occupies the entire screen of a dedicated desk monitor. It runs as a per
                     [ All my dreams ]          ← next line (dim, 0.8x size)
 ```
 
+- Exactly **one** prev line and **one** next line are rendered — no more, no less
 - Current line is centered, full brightness, full size
 - Adjacent lines are dimmer and slightly smaller
 - Transitions between lines are smooth (CSS animation)
+- **Edge cases**: at the first line of a song, the prev slot renders as empty space (not collapsed); at the last line, the next slot renders as empty space. Layout height remains constant throughout.
 
 ### 3. Translation: Smart Toggle
 
@@ -43,10 +45,11 @@ The app occupies the entire screen of a dedicated desk monitor. It runs as a per
   - **译文** — toggles translation on/off
   - **设置** — opens settings page
 - On mouse leave: control bar fades out after 2 seconds
-- Keyboard shortcuts work regardless of hover state:
-  - `T` — cycle theme picker
+- Keyboard shortcuts work regardless of hover state, **only when no input field is focused** (e.g., they are suppressed on the settings page while a text field is active):
+  - `T` — open/close theme picker panel (same as clicking 「主题」, not a cycle)
   - `L` — toggle translation
-  - `,` — open settings
+  - `,` — open/close settings page
+- Shortcuts fire on `keydown`, are case-insensitive, and do not require modifier keys
 
 ### 5. Theme System: JSON Config Files
 
@@ -88,7 +91,9 @@ Example theme file (`neon.json`):
   },
   "translation": {
     "color": "#00ff8877",
-    "fontSize": 13
+    "fontSize": 13,
+    "fontWeight": 400,
+    "fontStyle": "italic"
   },
   "transition": {
     "duration": 400,
@@ -97,6 +102,50 @@ Example theme file (`neon.json`):
   "thumbnail": "#050505,#00ff88"
 }
 ```
+
+**Full background `type` values:**
+
+| `type` | Description | Extra fields |
+|--------|-------------|--------------|
+| `solid` | Single color fill | `color` |
+| `gradient` | CSS linear gradient | `colors: string[]`, `angle: number` |
+| `album-art` | Dynamic: blurred + darkened album art; falls back to `fallbackColor` | `fallbackColor`, `blur`, `darken` |
+
+**Optional `container` field** (used by `frosted` theme to wrap lyrics in a card):
+```json
+"container": {
+  "background": "rgba(255,255,255,0.12)",
+  "backdropBlur": 20,
+  "border": "1px solid rgba(255,255,255,0.2)",
+  "borderRadius": 16,
+  "padding": "16px 28px"
+}
+```
+When `container` is absent, lyrics render directly on the background with no card.
+
+**Optional `border` field** (used by `rgb-border` theme for animated screen-edge glow):
+```json
+"border": {
+  "type": "rgb-cycle",
+  "width": 4,
+  "animationDuration": 4000
+}
+```
+Supported `type` values: `"none"` (default), `"solid"` (static color, uses `color` field), `"rgb-cycle"` (animated rainbow).
+
+**Optional `effect` field** (used by `crt-amber` theme for scanline overlay):
+```json
+"effect": {
+  "type": "crt-scanlines",
+  "opacity": 0.15,
+  "lineHeight": 4
+}
+```
+Supported `type` values: `"none"` (default), `"crt-scanlines"`.
+
+**Album art sourcing** (for `album-art` background type): The SpotifyPoller fetches artwork URL via `osascript` (`artwork url of current track`). The URL is passed to the renderer which loads it as an `<img>` element, applies CSS `filter: blur()` and `brightness()` as specified in the theme, and uses it as the background. No local cache or Spotify API is required.
+
+The `+` Import slot in the picker panel and the Import button on the settings page invoke the same action (file picker → validate → copy to themes directory → immediately activate the imported theme). They are not separate behaviors.
 
 #### Theme Management (Settings Page)
 
@@ -144,6 +193,19 @@ The app ships with the following default themes, covering the visual styles expl
 2. LyricsService receives event → concurrently queries all providers → returns first success
 3. Renderer receives `lyrics:loaded` via IPC → starts 250ms sync loop
 4. Sync loop reads `player position` → binary search for current line index → re-renders
+
+**Playback state handling:**
+- **Paused**: sync loop reduces poll interval to 2s (no need for frequent updates); renderer shows lyrics at the paused position with a subtle visual indicator (e.g., reduced opacity on the current line)
+- **Seek**: the binary search handles arbitrary position jumps naturally; no special case needed
+- **No lyrics found**: renderer shows a centered "未找到歌词" message in the context line style (dim, small); the current line slot shows the track title + artist as fallback
+
+### config.json Schema
+```json
+{
+  "activeTheme": "album-color",
+  "translationEnabled": false
+}
+```
 
 ### Theme Application
 - Active theme JSON is passed to renderer via IPC on app start and on theme change
