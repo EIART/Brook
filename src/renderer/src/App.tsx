@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { LyricsDisplay } from '../components/LyricsDisplay'
 import { ControlBar } from '../components/ControlBar'
+import { Capsule } from '../components/Capsule'
+import { ProgressBar } from '../components/ProgressBar'
 import { ThemePicker } from '../components/ThemePicker'
 import { SettingsPage } from '../components/SettingsPage'
 import { applyTheme } from '../theme/apply-theme'
@@ -13,10 +15,12 @@ const api = (window as any).api
 export default function App() {
   const [lines, setLines]                     = useState<LyricsLine[]>([])
   const [currentIndex, setCurrentIndex]       = useState(0)
-  const [hasTranslation, setHasTranslation]   = useState(false)
+  const [_hasTranslation, setHasTranslation]  = useState(false)
   const [notFoundTrack, setNotFoundTrack]     = useState<TrackInfo | null>(null)
   const [isPaused, setIsPaused]               = useState(false)
   const [artworkUrl, setArtworkUrl]           = useState<string | undefined>()
+  const [currentTrack, setCurrentTrack]       = useState<TrackInfo | null>(null)
+  const [currentPosition, setCurrentPosition] = useState(0)
   const [themes, setThemes]                   = useState<ThemeMeta[]>([])
   const [activeThemeId, setActiveThemeId]     = useState('album-color')
   const [activeTheme, setActiveTheme]         = useState<ThemeConfig | null>(null)
@@ -27,7 +31,7 @@ export default function App() {
   const linesRef = useRef(lines)
   linesRef.current = lines
 
-  const { visible: controlsVisible, onEnter, onLeave } = useHover(2000)
+  const { visible: controlsVisible, onEnter, onLeave } = useHover(2000, 300)
 
   // Load initial config
   useEffect(() => {
@@ -55,9 +59,11 @@ export default function App() {
       }),
       api.on('playback:update', (status: PlaybackStatus) => {
         setIsPaused(status.state !== 'playing')
-        if (status.track?.artworkUrl) setArtworkUrl(status.track.artworkUrl)
-
-        // Update current lyric line index
+        if (status.track) {
+          setCurrentTrack(status.track)
+          if (status.track.artworkUrl) setArtworkUrl(status.track.artworkUrl)
+        }
+        setCurrentPosition(status.position)
         const idx = findCurrentIndex(linesRef.current, status.position)
         setCurrentIndex(idx)
       }),
@@ -162,14 +168,19 @@ export default function App() {
         showTranslation={translationEnabled}
         isPaused={isPaused}
         notFoundTrack={notFoundTrack}
-        container={activeTheme?.container}
       />
 
-      {/* Control bar */}
+      {/* Top capsule HUD */}
+      <Capsule track={currentTrack} />
+
+      {/* Bottom progress bar */}
+      <ProgressBar position={currentPosition} duration={currentTrack?.duration ?? 0} />
+
+      {/* Hover overlay */}
       <ControlBar
         visible={controlsVisible}
-        hasTranslation={hasTranslation}
-        translationEnabled={translationEnabled}
+        track={currentTrack}
+        position={currentPosition}
         onTheme={() => setThemePickerOpen(prev => !prev)}
         onTranslation={toggleTranslation}
         onSettings={() => setSettingsOpen(prev => !prev)}
