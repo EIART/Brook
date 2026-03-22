@@ -1,4 +1,4 @@
-import type { LyricsLine } from '../../shared/types'
+import type { LyricsLine } from '../shared/types'
 import type { LyricsProvider, LyricsSearchRequest } from './providers/types'
 
 export class LyricsService {
