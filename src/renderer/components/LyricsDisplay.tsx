@@ -10,6 +10,7 @@ interface Props {
   showTranslation: boolean
   isPaused: boolean
   notFoundTrack?: TrackInfo | null
+  /** @deprecated Accepted for App.tsx compatibility; removed in Task 7. Not used. */
   container?: ThemeContainer
 }
 
