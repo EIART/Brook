@@ -1,0 +1,29 @@
+{
+  "name": "极简黑",
+  "version": "1.0",
+  "background": {
+    "type": "solid",
+    "color": "#0a0a0a"
+  },
+  "currentLine": {
+    "color": "#ffffff",
+    "fontSize": 28,
+    "fontWeight": 300
+  },
+  "contextLine": {
+    "color": "rgba(255,255,255,0.25)",
+    "fontSize": 14,
+    "fontWeight": 300
+  },
+  "translation": {
+    "color": "rgba(255,255,255,0.35)",
+    "fontSize": 13,
+    "fontWeight": 300,
+    "fontStyle": "italic"
+  },
+  "transition": {
+    "duration": 400,
+    "easing": "ease-in-out"
+  },
+  "thumbnail": "#0a0a0a,#ffffff"
+}

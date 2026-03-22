@@ -1,0 +1,31 @@
+{
+  "name": "专辑色调",
+  "version": "1.0",
+  "background": {
+    "type": "album-art",
+    "fallbackColor": "#111111",
+    "blur": 40,
+    "darken": 0.5
+  },
+  "currentLine": {
+    "color": "#ffffff",
+    "fontSize": 28,
+    "fontWeight": 600
+  },
+  "contextLine": {
+    "color": "rgba(255,255,255,0.4)",
+    "fontSize": 14,
+    "fontWeight": 400
+  },
+  "translation": {
+    "color": "rgba(255,255,255,0.5)",
+    "fontSize": 13,
+    "fontWeight": 400,
+    "fontStyle": "italic"
+  },
+  "transition": {
+    "duration": 500,
+    "easing": "ease-in-out"
+  },
+  "thumbnail": "#4a1a6b,#1a3a6b"
+}

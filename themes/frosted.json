@@ -1,0 +1,41 @@
+{
+  "name": "柔光毛玻璃",
+  "version": "1.0",
+  "background": {
+    "type": "gradient",
+    "colors": [
+      "#e8d5f5",
+      "#d5e8f5",
+      "#d5f5e8"
+    ],
+    "angle": 135
+  },
+  "currentLine": {
+    "color": "rgba(40,20,80,0.85)",
+    "fontSize": 26,
+    "fontWeight": 600
+  },
+  "contextLine": {
+    "color": "rgba(80,50,120,0.45)",
+    "fontSize": 13,
+    "fontWeight": 400
+  },
+  "translation": {
+    "color": "rgba(80,50,120,0.55)",
+    "fontSize": 12,
+    "fontWeight": 400,
+    "fontStyle": "italic"
+  },
+  "transition": {
+    "duration": 400,
+    "easing": "ease-in-out"
+  },
+  "thumbnail": "#e8d5f5,#d5f5e8",
+  "container": {
+    "background": "rgba(255,255,255,0.55)",
+    "backdropBlur": 20,
+    "border": "1px solid rgba(255,255,255,0.8)",
+    "borderRadius": 16,
+    "padding": "24px 40px"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "复古琥珀",
+  "version": "1.0",
+  "background": {
+    "type": "solid",
+    "color": "#080810"
+  },
+  "currentLine": {
+    "color": "#ffb300",
+    "fontSize": 22,
+    "fontWeight": 400,
+    "glow": {
+      "color": "rgba(255,179,0,0.8)",
+      "blur": 8,
+      "spread": 2
+    }
+  },
+  "contextLine": {
+    "color": "rgba(255,160,0,0.35)",
+    "fontSize": 12,
+    "fontWeight": 400
+  },
+  "translation": {
+    "color": "rgba(255,160,0,0.45)",
+    "fontSize": 11,
+    "fontWeight": 400,
+    "fontStyle": "normal"
+  },
+  "transition": {
+    "duration": 200,
+    "easing": "linear"
+  },
+  "thumbnail": "#080810,#ffb300",
+  "effect": {
+    "type": "crt-scanlines",
+    "opacity": 0.15,
+    "lineHeight": 4
+  }
+}

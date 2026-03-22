@@ -1,0 +1,34 @@
+{
+  "name": "霓虹发光",
+  "version": "1.0",
+  "background": {
+    "type": "solid",
+    "color": "#050505"
+  },
+  "currentLine": {
+    "color": "#00ff88",
+    "fontSize": 28,
+    "fontWeight": 700,
+    "glow": {
+      "color": "#00ff88",
+      "blur": 20,
+      "spread": 5
+    }
+  },
+  "contextLine": {
+    "color": "rgba(0,255,136,0.3)",
+    "fontSize": 14,
+    "fontWeight": 400
+  },
+  "translation": {
+    "color": "rgba(0,255,136,0.4)",
+    "fontSize": 13,
+    "fontWeight": 400,
+    "fontStyle": "italic"
+  },
+  "transition": {
+    "duration": 300,
+    "easing": "ease-in-out"
+  },
+  "thumbnail": "#050505,#00ff88"
+}

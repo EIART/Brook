@@ -1,0 +1,39 @@
+{
+  "name": "RGB 边框",
+  "version": "1.0",
+  "background": {
+    "type": "solid",
+    "color": "#030308"
+  },
+  "currentLine": {
+    "color": "#ffffff",
+    "fontSize": 28,
+    "fontWeight": 700,
+    "glow": {
+      "color": "rgba(168,85,247,0.6)",
+      "blur": 25,
+      "spread": 5
+    }
+  },
+  "contextLine": {
+    "color": "rgba(255,255,255,0.3)",
+    "fontSize": 14,
+    "fontWeight": 400
+  },
+  "translation": {
+    "color": "rgba(255,255,255,0.4)",
+    "fontSize": 13,
+    "fontWeight": 400,
+    "fontStyle": "italic"
+  },
+  "transition": {
+    "duration": 400,
+    "easing": "ease-in-out"
+  },
+  "thumbnail": "#030308,#a855f7",
+  "border": {
+    "type": "rgb-cycle",
+    "width": 4,
+    "animationDuration": 4000
+  }
+}
