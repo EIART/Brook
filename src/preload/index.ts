@@ -1,19 +1,12 @@
-import { contextBridge } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+// src/preload/index.ts
+import { contextBridge, ipcRenderer } from 'electron'
 
-// Use `contextBridge` APIs to expose Electron APIs to renderer.
-// If contextIsolation is disabled, use `window.electron = require('electron')` instead.
-/* eslint-disable  @typescript-eslint/no-explicit-any */
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', {})
-  } catch (error) {
-    console.error(error)
-  }
-} else {
-  // @ts-ignore (define in dts)
-  window.electron = electronAPI
-  // @ts-ignore (define in dts)
-  window.api = {}
-}
+contextBridge.exposeInMainWorld('api', {
+  send:   (channel: string, data: unknown) => ipcRenderer.send(channel, data),
+  invoke: (channel: string, data?: unknown) => ipcRenderer.invoke(channel, data),
+  on:     (channel: string, cb: (data: unknown) => void) => {
+    const handler = (_: Electron.IpcRendererEvent, data: unknown) => cb(data)
+    ipcRenderer.on(channel, handler)
+    return () => ipcRenderer.removeListener(channel, handler)
+  },
+})
