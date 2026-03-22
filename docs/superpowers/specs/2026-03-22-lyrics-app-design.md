@@ -109,7 +109,19 @@ Example theme file (`neon.json`):
 |--------|-------------|--------------|
 | `solid` | Single color fill | `color` |
 | `gradient` | CSS linear gradient | `colors: string[]`, `angle: number` |
-| `album-art` | Dynamic: blurred + darkened album art; falls back to `fallbackColor` | `fallbackColor`, `blur`, `darken` |
+| `album-art` | Dynamic: blurred + darkened album art; falls back to `fallbackColor` | `fallbackColor` (hex string), `blur` (integer, pixels), `darken` (float 0–1, where 1 = fully black) |
+
+Example:
+```json
+"background": {
+  "type": "album-art",
+  "fallbackColor": "#111111",
+  "blur": 40,
+  "darken": 0.5
+}
+```
+
+`blur` is applied as CSS `filter: blur(Npx)`. `darken` is applied as an overlay `rgba(0,0,0,darken)` on top of the blurred image. `fallbackColor` is used when artwork URL is unavailable (e.g., local files without embedded art).
 
 **Optional `container` field** (used by `frosted` theme to wrap lyrics in a card):
 ```json
@@ -131,7 +143,12 @@ When `container` is absent, lyrics render directly on the background with no car
   "animationDuration": 4000
 }
 ```
-Supported `type` values: `"none"` (default), `"solid"` (static color, uses `color` field), `"rgb-cycle"` (animated rainbow).
+Supported `type` values: `"none"` (default), `"solid"` (static color), `"rgb-cycle"` (animated rainbow).
+
+For `solid`:
+```json
+"border": { "type": "solid", "color": "#a855f7", "width": 4 }
+```
 
 **Optional `effect` field** (used by `crt-amber` theme for scanline overlay):
 ```json
