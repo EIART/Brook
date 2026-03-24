@@ -1,13 +1,13 @@
 // src/main/ipc-bridge.ts
 import { ipcMain, dialog, BrowserWindow } from 'electron'
-import type { SpotifyPoller } from './spotify-poller'
+import type { EventEmitter } from 'node:events'
 import type { LyricsService } from './lyrics-service'
 import type { ThemeManager } from './theme-manager'
 import type { Config } from './config'
 
 export function registerIpcHandlers(
   win: BrowserWindow,
-  poller: SpotifyPoller,
+  poller: EventEmitter,
   lyricsService: LyricsService,
   themeManager: ThemeManager,
   config: Config,

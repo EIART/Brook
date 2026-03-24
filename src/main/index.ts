@@ -2,6 +2,7 @@
 import { app, BrowserWindow, screen } from 'electron'
 import { join } from 'node:path'
 import { SpotifyPoller } from './spotify-poller'
+import { RemotePoller } from './remote-poller'
 import { LyricsService } from './lyrics-service'
 import { neteaseProvider } from './providers/netease'
 import { kugouProvider } from './providers/kugou'
@@ -38,7 +39,10 @@ async function createWindow(): Promise<void> {
   const themeManager = new ThemeManager(userThemesDir, builtInThemesDir)
 
   const lyricsService = new LyricsService([neteaseProvider, kugouProvider, qqProvider])
-  const poller = new SpotifyPoller()
+  const cfg = config.get()
+  const poller = cfg.pollerSource === 'remote'
+    ? new RemotePoller(cfg.remotePort)
+    : new SpotifyPoller()
 
   registerIpcHandlers(win, poller, lyricsService, themeManager, config)
 

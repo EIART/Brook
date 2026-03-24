@@ -5,6 +5,8 @@ import type { AppConfig } from '../shared/types'
 const DEFAULTS: AppConfig = {
   activeTheme: 'album-color',
   translationEnabled: false,
+  pollerSource: 'remote',
+  remotePort: 9898,
 }
 
 export class Config {

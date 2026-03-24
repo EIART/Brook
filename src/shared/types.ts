@@ -46,6 +46,8 @@ export interface IpcChannels {
 export interface AppConfig {
   activeTheme: string
   translationEnabled: boolean
+  pollerSource: 'local' | 'remote'
+  remotePort: number
 }
 
 export interface ThemeMeta {
