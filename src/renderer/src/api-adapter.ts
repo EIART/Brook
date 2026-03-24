@@ -58,6 +58,6 @@ export function createApi(): Api {
     return createElectronApi()
   }
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const wsUrl = `${wsProtocol}//${window.location.host}`
+  const wsUrl = `${wsProtocol}//${window.location.host}/brook-ws`
   return createWebSocketApi(wsUrl)
 }

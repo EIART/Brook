@@ -3,6 +3,7 @@ import { createServer, IncomingMessage, ServerResponse } from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { join, extname } from 'node:path'
 import { WebSocketServer, WebSocket } from 'ws'
+import * as net from 'node:net'
 
 const MIME: Record<string, string> = {
   '.html': 'text/html',
@@ -16,6 +17,8 @@ const MIME: Record<string, string> = {
   '.woff': 'font/woff',
 }
 
+const DATA_WS_PATH = '/brook-ws'
+
 export class WebBroadcastServer {
   private wss: WebSocketServer | null = null
   private httpServer: ReturnType<typeof createServer> | null = null
@@ -27,12 +30,23 @@ export class WebBroadcastServer {
       this._serveStatic(req, res, staticDir)
     })
 
-    this.wss = new WebSocketServer({ server: this.httpServer })
-
+    // noServer: we handle the upgrade event manually for path-based routing
+    this.wss = new WebSocketServer({ noServer: true })
     this.wss.on('connection', (ws) => {
       this.clients.add(ws)
       ws.on('close', () => this.clients.delete(ws))
       ws.on('message', (raw) => this._handleMessage(ws, raw.toString()))
+    })
+
+    this.httpServer.on('upgrade', (req, socket, head) => {
+      const pathname = new URL(req.url ?? '/', `http://localhost`).pathname
+      if (pathname === DATA_WS_PATH) {
+        this.wss!.handleUpgrade(req, socket as net.Socket, head, (ws) => {
+          this.wss!.emit('connection', ws, req)
+        })
+      } else {
+        (socket as net.Socket).destroy()
+      }
     })
 
     this.httpServer.listen(port, '0.0.0.0', () => {
