@@ -4,6 +4,7 @@ import type { EventEmitter } from 'node:events'
 import type { LyricsService } from './lyrics-service'
 import type { ThemeManager } from './theme-manager'
 import type { Config } from './config'
+import type { LyricsCandidate } from '../shared/types'
 
 export function registerIpcHandlers(
   win: BrowserWindow,
@@ -62,22 +63,40 @@ export function registerIpcHandlers(
     await themeManager.renameTheme(id, name)
   })
 
-  // Forward SpotifyPoller events to renderer
+  let lastCandidates: LyricsCandidate[] = []
+
+  // Forward poller events to renderer
   poller.on('playback:update', (status) => {
     win.webContents.send('playback:update', status)
   })
 
   poller.on('track:changed', async (track) => {
     try {
-      const lines = await lyricsService.fetch({
+      const candidates = await lyricsService.fetchAllCandidates({
         title: track.title,
         artist: track.artist,
         duration: track.duration,
       })
-      const hasTranslation = lines.some(l => l.translation !== undefined)
-      win.webContents.send('lyrics:loaded', { lines, hasTranslation })
+      lastCandidates = candidates
+      win.webContents.send('candidates:loaded', { candidates, activeIndex: 0 })
+
+      if (candidates.length > 0) {
+        const lines = await lyricsService.fetchForCandidate(candidates[0])
+        const hasTranslation = lines.some(l => l.translation !== undefined)
+        win.webContents.send('lyrics:loaded', { lines, hasTranslation })
+      } else {
+        win.webContents.send('lyrics:not-found', { track })
+      }
     } catch {
       win.webContents.send('lyrics:not-found', { track })
     }
+  })
+
+  ipcMain.handle('candidate:select', async (_e, { id }: { id: string }) => {
+    const candidate = lastCandidates.find(c => c.id === id)
+    if (!candidate) return
+    const lines = await lyricsService.fetchForCandidate(candidate)
+    const hasTranslation = lines.some(l => l.translation !== undefined)
+    win.webContents.send('lyrics:loaded', { lines, hasTranslation })
   })
 }
