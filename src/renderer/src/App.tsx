@@ -35,13 +35,15 @@ export default function App() {
   const linesRef = useRef(lines)
   linesRef.current = lines
 
-  const { visible: controlsVisible, onEnter, onLeave } = useHover(2000, 0)
+  const { visible: controlsVisible, onEnter, onLeave } = useHover(0, 0)
 
   // Load initial config
   useEffect(() => {
     api.invoke('config:get').then(({ result }: { result: AppConfig }) => {
       setActiveThemeId(result.activeTheme)
       setTranslationEnabled(result.translationEnabled)
+      // Apply initial theme — theme:activate sends back theme:changed which calls applyTheme
+      api.invoke('theme:activate', { id: result.activeTheme })
     })
     api.invoke('theme:get-all').then(({ result }: { result: ThemeMeta[] }) => {
       setThemes(result)
@@ -144,7 +146,7 @@ export default function App() {
   return (
     <div
       className="relative w-screen h-screen overflow-hidden select-none"
-      style={{ backgroundColor: 'var(--theme-bg-color, #000)' }}
+      style={{ background: 'var(--theme-bg-gradient, var(--theme-bg-color, #000))' }}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
     >
