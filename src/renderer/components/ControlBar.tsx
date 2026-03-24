@@ -7,6 +7,7 @@ interface Props {
   onTheme: () => void
   onTranslation: () => void
   onSettings: () => void
+  onCandidates: () => void
 }
 
 function formatTime(seconds: number): string {
@@ -15,13 +16,14 @@ function formatTime(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-export function ControlBar({ visible, track, position, onTheme, onTranslation, onSettings }: Props): JSX.Element {
+export function ControlBar({ visible, track, position, onTheme, onTranslation, onSettings, onCandidates }: Props): JSX.Element {
   const duration = track?.duration ?? 0
   const pct = duration > 0 ? Math.min(100, (position / duration) * 100) : 0
 
   const shortcuts = [
     { key: 'T', label: '主题',  action: onTheme },
     { key: 'L', label: '译文',  action: onTranslation },
+    { key: 'S', label: '来源',  action: onCandidates },
     { key: ',', label: '设置',  action: onSettings },
   ]
 
