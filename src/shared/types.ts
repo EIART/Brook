@@ -6,6 +6,14 @@ export interface LyricsLine {
   translation?: string  // optional translated line
 }
 
+export interface LyricsCandidate {
+  id: string            // unique: `${provider}:${providerSongId}`
+  provider: string      // 'netease' | 'kugou' | 'qq'
+  title: string
+  artist: string
+  album?: string
+}
+
 export interface TrackInfo {
   title: string
   artist: string
@@ -25,11 +33,12 @@ export interface PlaybackStatus {
 // Typed IPC channel definitions
 export interface IpcChannels {
   // main → renderer (send)
-  'lyrics:loaded':    { lines: LyricsLine[]; hasTranslation: boolean }
-  'lyrics:not-found': { track: TrackInfo }
-  'playback:update':  PlaybackStatus
-  'theme:list':       { themes: ThemeMeta[] }
-  'theme:changed':    { theme: ThemeConfig }
+  'lyrics:loaded':      { lines: LyricsLine[]; hasTranslation: boolean }
+  'lyrics:not-found':   { track: TrackInfo }
+  'playback:update':    PlaybackStatus
+  'theme:list':         { themes: ThemeMeta[] }
+  'theme:changed':      { theme: ThemeConfig }
+  'candidates:loaded':  { candidates: LyricsCandidate[]; activeIndex: number }
 
   // renderer → main (invoke, returns value)
   'theme:get-all':    { result: ThemeMeta[] }
@@ -41,6 +50,7 @@ export interface IpcChannels {
   'config:get':       { result: AppConfig }
   'config:set':       { patch: Partial<AppConfig> }
   'position:get':     { result: number }  // current playback position in seconds
+  'candidate:select': { id: string }
 }
 
 export interface AppConfig {

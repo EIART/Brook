@@ -1,5 +1,5 @@
 // src/main/providers/types.ts
-import type { LyricsLine } from '../../shared/types'
+import type { LyricsLine, LyricsCandidate } from '../../shared/types'
 
 export interface LyricsSearchRequest {
   title: string
@@ -10,4 +10,6 @@ export interface LyricsSearchRequest {
 export interface LyricsProvider {
   name: string
   search(req: LyricsSearchRequest): Promise<LyricsLine[]>
+  searchCandidates(req: LyricsSearchRequest): Promise<LyricsCandidate[]>
+  fetchLyrics(candidate: LyricsCandidate): Promise<LyricsLine[]>
 }
