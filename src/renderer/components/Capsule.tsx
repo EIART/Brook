@@ -24,17 +24,6 @@ export function Capsule({ track }: Props): JSX.Element | null {
         whiteSpace: 'nowrap',
       }}
     >
-      {/* 专辑封面 */}
-      {track.artworkUrl ? (
-        <img
-          src={track.artworkUrl}
-          alt=""
-          style={{ width: 22, height: 22, borderRadius: 5, flexShrink: 0, objectFit: 'cover' }}
-        />
-      ) : (
-        <div style={{ width: 22, height: 22, borderRadius: 5, flexShrink: 0, background: 'rgba(255,255,255,0.15)' }} />
-      )}
-
       {/* 歌名 */}
       <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.85)', letterSpacing: '-0.01em' }}>
         {track.title}
