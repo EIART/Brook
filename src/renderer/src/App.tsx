@@ -10,8 +10,9 @@ import { applyTheme } from '../theme/apply-theme'
 import { useHover } from '../hooks/useHover'
 import { useKeyboard } from '../hooks/useKeyboard'
 import type { LyricsLine, TrackInfo, ThemeMeta, ThemeConfig, AppConfig, PlaybackStatus, LyricsCandidate } from '../../shared/types'
+import { createApi } from './api-adapter'
 
-const api = (window as any).api
+const api = createApi()
 
 export default function App() {
   const [lines, setLines]                     = useState<LyricsLine[]>([])
