@@ -1,19 +1,19 @@
 // src/main/providers/netease.ts
 import { parseLrc } from './lrc-parser'
 import type { LyricsProvider, LyricsSearchRequest } from './types'
-import type { LyricsLine } from '../../shared/types'
+import type { LyricsLine, LyricsCandidate } from '../../shared/types'
 
 const SEARCH_URL = 'http://music.163.com/api/search/pc'
 const LYRIC_URL  = 'http://music.163.com/api/song/lyric'
 
-interface SearchResult { id: number; name: string; artists: { name: string }[] }
+interface SearchResult { id: number; name: string; artists: { name: string }[]; album?: { name: string } }
 interface SearchResponse { result?: { songs?: SearchResult[] } }
 interface LyricResponse { lrc?: { lyric?: string }; tlyric?: { lyric?: string } }
 
 export const neteaseProvider: LyricsProvider = {
   name: 'netease',
 
-  async search(req: LyricsSearchRequest): Promise<LyricsLine[]> {
+  async searchCandidates(req: LyricsSearchRequest): Promise<LyricsCandidate[]> {
     const params = new URLSearchParams({
       s: `${req.title} ${req.artist}`,
       type: '1',
@@ -28,9 +28,19 @@ export const neteaseProvider: LyricsProvider = {
     const songs = searchData.result?.songs ?? []
     if (songs.length === 0) throw new Error('netease: no results')
 
-    const best = pickBest(songs, req)
+    return songs.map(s => ({
+      id: `netease:${s.id}`,
+      provider: 'netease',
+      title: s.name,
+      artist: s.artists.map(a => a.name).join(', '),
+      album: s.album?.name,
+    }))
+  },
+
+  async fetchLyrics(candidate: LyricsCandidate): Promise<LyricsLine[]> {
+    const songId = candidate.id.replace('netease:', '')
     const lyricRes = await fetch(
-      `${LYRIC_URL}?id=${best.id}&lv=1&kv=1&tv=-1`,
+      `${LYRIC_URL}?id=${songId}&lv=1&kv=1&tv=-1`,
       { headers: { 'User-Agent': 'Mozilla/5.0' } }
     )
     const lyricData: LyricResponse = await lyricRes.json()
@@ -40,10 +50,16 @@ export const neteaseProvider: LyricsProvider = {
 
     return parseLrc(lrc, lyricData.tlyric?.lyric)
   },
+
+  async search(req: LyricsSearchRequest): Promise<LyricsLine[]> {
+    const candidates = await neteaseProvider.searchCandidates(req)
+    const best = pickBest(candidates, req)
+    return neteaseProvider.fetchLyrics(best)
+  },
 }
 
-function pickBest(songs: SearchResult[], req: LyricsSearchRequest): SearchResult {
+function pickBest(candidates: LyricsCandidate[], req: LyricsSearchRequest): LyricsCandidate {
   // Prefer exact title match
-  const exact = songs.find(s => s.name.toLowerCase() === req.title.toLowerCase())
-  return exact ?? songs[0]
+  const exact = candidates.find(c => c.title.toLowerCase() === req.title.toLowerCase())
+  return exact ?? candidates[0]
 }
