@@ -94,25 +94,26 @@ async function poll(): Promise<void> {
 }
 
 async function detectStatus(): Promise<PlaybackStatus> {
+  const results: { detector: PlayerDetector; status: PlaybackStatus }[] = []
+
   for (const detector of DETECTORS) {
     const running = await detector.isRunning()
     if (running) {
       const status = await detector.poll()
-      // Only use this detector if something is actually playing or paused
-      // (prefer a playing detector over a stopped one)
-      if (status.state !== 'stopped') {
-        return status
-      }
+      results.push({ detector, status })
     }
   }
 
-  // Fall back: poll Spotify regardless (it might be paused with a track loaded)
-  for (const detector of DETECTORS) {
-    const running = await detector.isRunning()
-    if (running) {
-      return detector.poll()
-    }
-  }
+  // Priority 1: a player that is actively playing
+  const playing = results.find((r) => r.status.state === 'playing')
+  if (playing) return playing.status
+
+  // Priority 2: a player that is paused (has a track loaded)
+  const paused = results.find((r) => r.status.state === 'paused')
+  if (paused) return paused.status
+
+  // Priority 3: any running player (stopped state)
+  if (results.length > 0) return results[0].status
 
   return { state: 'stopped', position: 0, track: null }
 }
