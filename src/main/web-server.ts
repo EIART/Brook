@@ -1,8 +1,9 @@
 // src/main/web-server.ts
-import { createServer, IncomingMessage, ServerResponse } from 'node:http'
+import { createServer, IncomingMessage, ServerResponse, request as httpRequest } from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { join, extname } from 'node:path'
 import { WebSocketServer, WebSocket } from 'ws'
+import { URL } from 'node:url'
 import * as net from 'node:net'
 
 const MIME: Record<string, string> = {
@@ -24,10 +25,17 @@ export class WebBroadcastServer {
   private httpServer: ReturnType<typeof createServer> | null = null
   private readonly clients = new Set<WebSocket>()
   private readonly invokeHandlers = new Map<string, (data: unknown) => Promise<unknown>>()
+  private devProxyUrl: string | null = null
 
-  start(port: number, staticDir: string): void {
+  start(port: number, staticDir: string, devProxyUrl?: string): void {
+    this.devProxyUrl = devProxyUrl ?? null
+
     this.httpServer = createServer((req, res) => {
-      this._serveStatic(req, res, staticDir)
+      if (this.devProxyUrl) {
+        this._proxyHttp(req, res, this.devProxyUrl)
+      } else {
+        this._serveStatic(req, res, staticDir)
+      }
     })
 
     // noServer: we handle the upgrade event manually for path-based routing
@@ -44,6 +52,8 @@ export class WebBroadcastServer {
         this.wss!.handleUpgrade(req, socket as net.Socket, head, (ws) => {
           this.wss!.emit('connection', ws, req)
         })
+      } else if (this.devProxyUrl) {
+        this._proxyWsUpgrade(req, socket as net.Socket, this.devProxyUrl)
       } else {
         (socket as net.Socket).destroy()
       }
@@ -94,6 +104,50 @@ export class WebBroadcastServer {
     } catch (err) {
       ws.send(JSON.stringify({ type: 'response', id: msg.id, result: null, error: String(err) }))
     }
+  }
+
+  private _proxyHttp(req: IncomingMessage, res: ServerResponse, targetBase: string): void {
+    const target = new URL(req.url ?? '/', targetBase)
+    const proxyReq = httpRequest({
+      hostname: target.hostname,
+      port: target.port || 80,
+      path: target.pathname + target.search,
+      method: req.method,
+      headers: req.headers,
+    }, (proxyRes) => {
+      res.writeHead(proxyRes.statusCode ?? 200, proxyRes.headers)
+      proxyRes.pipe(res)
+    })
+
+    proxyReq.on('error', () => {
+      res.writeHead(502)
+      res.end('Bad Gateway')
+    })
+
+    req.pipe(proxyReq)
+  }
+
+  private _proxyWsUpgrade(req: IncomingMessage, socket: net.Socket, targetBase: string): void {
+    const target = new URL(req.url ?? '/', targetBase)
+    const proxyReq = httpRequest({
+      hostname: target.hostname,
+      port: target.port || 80,
+      path: target.pathname + target.search,
+      method: 'GET',
+      headers: { ...req.headers, host: `${target.hostname}:${target.port}` },
+    })
+
+    proxyReq.on('upgrade', (_proxyRes, proxySocket, proxyHead) => {
+      socket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n')
+      if (proxyHead.length > 0) socket.unshift(proxyHead)
+      proxySocket.pipe(socket)
+      socket.pipe(proxySocket)
+      socket.on('error', () => proxySocket.destroy())
+      proxySocket.on('error', () => socket.destroy())
+    })
+
+    proxyReq.on('error', () => socket.destroy())
+    proxyReq.end()
   }
 
   private async _serveStatic(req: IncomingMessage, res: ServerResponse, staticDir: string): Promise<void> {
