@@ -4,6 +4,7 @@ interface Handlers {
   onTheme:       () => void
   onTranslation: () => void
   onSettings:    () => void
+  onCandidates:  () => void
 }
 
 export function useKeyboard(handlers: Handlers): void {
@@ -16,6 +17,7 @@ export function useKeyboard(handlers: Handlers): void {
         case 't': handlers.onTheme();       break
         case 'l': handlers.onTranslation(); break
         case ',': handlers.onSettings();    break
+        case 's': handlers.onCandidates();  break
       }
     }
     document.addEventListener('keydown', onKeyDown)
