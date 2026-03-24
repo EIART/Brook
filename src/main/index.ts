@@ -10,6 +10,7 @@ import { qqProvider } from './providers/qq'
 import { ThemeManager } from './theme-manager'
 import { Config } from './config'
 import { registerIpcHandlers } from './ipc-bridge'
+import { WebBroadcastServer } from './web-server'
 
 async function createWindow(): Promise<void> {
   // Target the non-primary display if available
@@ -44,7 +45,11 @@ async function createWindow(): Promise<void> {
     ? new RemotePoller(cfg.remotePort)
     : new SpotifyPoller()
 
-  registerIpcHandlers(win, poller, lyricsService, themeManager, config)
+  const webServer = new WebBroadcastServer()
+  const staticDir = join(__dirname, '../renderer')
+  webServer.start(cfg.webPort, staticDir)
+
+  registerIpcHandlers(win, poller, lyricsService, themeManager, config, webServer)
 
   if (process.env.NODE_ENV === 'development') {
     win.loadURL(process.env.ELECTRON_RENDERER_URL!)
@@ -54,14 +59,16 @@ async function createWindow(): Promise<void> {
 
   // Load initial theme and send to renderer once ready
   win.webContents.once('did-finish-load', async () => {
-    const cfg = config.get()
-    const theme = await themeManager.loadTheme(cfg.activeTheme).catch(() =>
+    const currentCfg = config.get()
+    const theme = await themeManager.loadTheme(currentCfg.activeTheme).catch(() =>
       themeManager.loadTheme('dark-minimal')
     )
     win.webContents.send('theme:changed', { theme })
+    webServer.broadcast('theme:changed', { theme })
 
     const themes = await themeManager.listThemes()
     win.webContents.send('theme:list', { themes })
+    webServer.broadcast('theme:list', { themes })
   })
 
   poller.start()
