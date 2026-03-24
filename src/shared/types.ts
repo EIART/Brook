@@ -58,6 +58,7 @@ export interface AppConfig {
   translationEnabled: boolean
   pollerSource: 'local' | 'remote'
   remotePort: number
+  webPort: number
 }
 
 export interface ThemeMeta {

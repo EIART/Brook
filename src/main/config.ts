@@ -7,6 +7,7 @@ const DEFAULTS: AppConfig = {
   translationEnabled: false,
   pollerSource: 'remote',
   remotePort: 9898,
+  webPort: 9899,
 }
 
 export class Config {
