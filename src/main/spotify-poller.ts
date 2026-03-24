@@ -3,6 +3,9 @@ import { EventEmitter } from 'node:events'
 import type { TrackInfo, PlaybackState, PlaybackStatus } from '../shared/types'
 
 const APPLESCRIPT = `
+if application "Spotify" is not running then
+  return "stopped\n\n\n\n0\n0\n"
+end if
 tell application "Spotify"
   set s to (get player state) as string
   set t to (get name of current track) as string
