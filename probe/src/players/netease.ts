@@ -2,54 +2,41 @@ import { exec } from 'node:child_process'
 import type { PlayerDetector } from './types.js'
 import type { PlaybackStatus, PlaybackState } from '../types.js'
 
-// NeteaseMusic exposes player state as integers: 0=stopped, 1=playing, 2=paused
-// Artwork URL is not available via AppleScript for NeteaseMusic
-const APPLESCRIPT = `
-if application "NeteaseMusic" is not running then
-  return "0\\n\\n\\n\\n0\\n0"
-end if
-tell application "NeteaseMusic"
-  set s to (get player state) as string
-  set t to (get name of current track) as string
-  set ar to (get artist of current track) as string
-  set al to (get album of current track) as string
-  set d to (get duration of current track) as number
-  set p to (get player position) as number
-  return s & "\\n" & t & "\\n" & ar & "\\n" & al & "\\n" & d & "\\n" & p
-end tell
-`
+// NeteaseMusic does not support AppleScript.
+// We detect the process via System Events, and read playback info
+// from the macOS Now Playing API via nowplaying-cli.
+// Install: brew install nowplaying-cli
 
-function runScript(script: string): Promise<string> {
+const NETEASE_BUNDLE_ID = 'com.netease.163music'
+
+function run(cmd: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    exec(`osascript -e '${script.replace(/'/g, "'\\''")}'`, (err, stdout) => {
+    exec(cmd, (err, stdout) => {
       if (err) reject(err)
       else resolve(stdout.trim())
     })
   })
 }
 
-export function parseNeteaseOutput(output: string): PlaybackStatus {
-  const [stateRaw, title, artist, album, durationSec, positionSec] = output
-    .split('\n')
-    .map((s) => s.trim())
+export function parseNeteaseOutput(title: string, artist: string, album: string, duration: string, elapsed: string, rate: string): PlaybackStatus {
+  const playRate = parseFloat(rate) || 0
+  const state: PlaybackState = playRate > 0 ? 'playing' : 'paused'
 
-  // NeteaseMusic returns integer state: 0=stopped, 1=playing, 2=paused
-  const stateNum = parseInt(stateRaw)
-  const state: PlaybackState =
-    stateNum === 1 ? 'playing' : stateNum === 2 ? 'paused' : 'stopped'
-
-  const track = title
+  const track = title && title !== 'null'
     ? {
         title,
-        artist,
-        album,
-        duration: parseFloat(durationSec) || 0,
-        // NeteaseMusic does not expose artwork URL via AppleScript
+        artist: artist || '',
+        album: album || '',
+        duration: parseFloat(duration) || 0,
         artworkUrl: undefined,
       }
     : null
 
-  return { state, position: parseFloat(positionSec) || 0, track }
+  return {
+    state: track ? state : 'stopped',
+    position: parseFloat(elapsed) || 0,
+    track,
+  }
 }
 
 export const neteaseDetector: PlayerDetector = {
@@ -57,15 +44,31 @@ export const neteaseDetector: PlayerDetector = {
 
   async isRunning(): Promise<boolean> {
     try {
-      const result = await runScript(`application "NeteaseMusic" is running`)
-      return result.trim() === 'true'
+      const result = await run(
+        `osascript -e 'tell application "System Events" to (name of processes) contains "NeteaseMusic"'`
+      )
+      return result === 'true'
     } catch {
       return false
     }
   },
 
   async poll(): Promise<PlaybackStatus> {
-    const output = await runScript(APPLESCRIPT)
-    return parseNeteaseOutput(output)
+    // Check that NeteaseMusic is the active Now Playing source
+    const bundleId = await run('nowplaying-cli get bundleIdentifier').catch(() => '')
+    if (bundleId !== NETEASE_BUNDLE_ID) {
+      return { state: 'stopped', position: 0, track: null }
+    }
+
+    const [title, artist, album, duration, elapsed, rate] = await Promise.all([
+      run('nowplaying-cli get title').catch(() => ''),
+      run('nowplaying-cli get artist').catch(() => ''),
+      run('nowplaying-cli get album').catch(() => ''),
+      run('nowplaying-cli get duration').catch(() => '0'),
+      run('nowplaying-cli get elapsedTime').catch(() => '0'),
+      run('nowplaying-cli get playbackRate').catch(() => '0'),
+    ])
+
+    return parseNeteaseOutput(title, artist, album, duration, elapsed, rate)
   },
 }
