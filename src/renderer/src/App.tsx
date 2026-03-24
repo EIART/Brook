@@ -5,10 +5,11 @@ import { Capsule } from '../components/Capsule'
 import { ProgressBar } from '../components/ProgressBar'
 import { ThemePicker } from '../components/ThemePicker'
 import { SettingsPage } from '../components/SettingsPage'
+import { CandidatePicker } from '../components/CandidatePicker'
 import { applyTheme } from '../theme/apply-theme'
 import { useHover } from '../hooks/useHover'
 import { useKeyboard } from '../hooks/useKeyboard'
-import type { LyricsLine, TrackInfo, ThemeMeta, ThemeConfig, AppConfig, PlaybackStatus } from '../../shared/types'
+import type { LyricsLine, TrackInfo, ThemeMeta, ThemeConfig, AppConfig, PlaybackStatus, LyricsCandidate } from '../../shared/types'
 
 const api = (window as any).api
 
@@ -25,13 +26,16 @@ export default function App() {
   const [activeThemeId, setActiveThemeId]     = useState('album-color')
   const [activeTheme, setActiveTheme]         = useState<ThemeConfig | null>(null)
   const [translationEnabled, setTranslationEnabled] = useState(false)
-  const [themePickerOpen, setThemePickerOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen]       = useState(false)
+  const [themePickerOpen, setThemePickerOpen]       = useState(false)
+  const [settingsOpen, setSettingsOpen]             = useState(false)
+  const [candidates, setCandidates]                 = useState<LyricsCandidate[]>([])
+  const [activeCandidateId, setActiveCandidateId]   = useState<string | null>(null)
+  const [candidatePickerOpen, setCandidatePickerOpen] = useState(false)
 
   const linesRef = useRef(lines)
   linesRef.current = lines
 
-  const { visible: controlsVisible, onEnter, onLeave } = useHover(2000, 300)
+  const { visible: controlsVisible, onEnter, onLeave } = useHover(2000, 0)
 
   // Load initial config
   useEffect(() => {
@@ -74,6 +78,10 @@ export default function App() {
       api.on('theme:list', ({ themes: t }: { themes: ThemeMeta[] }) => {
         setThemes(t)
       }),
+      api.on('candidates:loaded', ({ candidates: c, activeIndex }: { candidates: LyricsCandidate[]; activeIndex: number }) => {
+        setCandidates(c)
+        setActiveCandidateId(c[activeIndex]?.id ?? null)
+      }),
     ]
     return () => unsubs.forEach((u: () => void) => u())
   }, [])
@@ -111,10 +119,16 @@ export default function App() {
     })
   }, [])
 
+  const handleCandidateSelect = useCallback(async (id: string) => {
+    setActiveCandidateId(id)
+    await api.invoke('candidate:select', { id })
+  }, [])
+
   useKeyboard({
     onTheme:       () => setThemePickerOpen(prev => !prev),
     onTranslation: toggleTranslation,
     onSettings:    () => setSettingsOpen(prev => !prev),
+    onCandidates:  () => setCandidatePickerOpen(prev => !prev),
   })
 
   // Album art background
@@ -184,6 +198,7 @@ export default function App() {
         onTheme={() => setThemePickerOpen(prev => !prev)}
         onTranslation={toggleTranslation}
         onSettings={() => setSettingsOpen(prev => !prev)}
+        onCandidates={() => setCandidatePickerOpen(prev => !prev)}
       />
 
       {/* Theme picker */}
@@ -205,6 +220,15 @@ export default function App() {
         onExport={handleExport}
         onDelete={handleDelete}
         onRename={handleRename}
+      />
+
+      {/* Candidate picker */}
+      <CandidatePicker
+        visible={candidatePickerOpen}
+        candidates={candidates}
+        activeId={activeCandidateId}
+        onSelect={(id) => { handleCandidateSelect(id); setCandidatePickerOpen(false) }}
+        onClose={() => setCandidatePickerOpen(false)}
       />
     </div>
   )
