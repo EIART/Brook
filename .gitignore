@@ -16,3 +16,6 @@ out
 *.njsproj
 *.sln
 *.sw?
+
+# Superpowers internal tooling
+.superpowers/
