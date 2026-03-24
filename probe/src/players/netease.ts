@@ -7,8 +7,6 @@ import type { PlaybackStatus, PlaybackState } from '../types.js'
 // from the macOS Now Playing API via nowplaying-cli.
 // Install: brew install nowplaying-cli
 
-const NETEASE_BUNDLE_ID = 'com.netease.163music'
-
 function run(cmd: string): Promise<string> {
   return new Promise((resolve, reject) => {
     exec(cmd, (err, stdout) => {
@@ -54,12 +52,9 @@ export const neteaseDetector: PlayerDetector = {
   },
 
   async poll(): Promise<PlaybackStatus> {
-    // Check that NeteaseMusic is the active Now Playing source
-    const bundleId = await run('nowplaying-cli get bundleIdentifier').catch(() => '')
-    if (bundleId !== NETEASE_BUNDLE_ID) {
-      return { state: 'stopped', position: 0, track: null }
-    }
-
+    // NeteaseMusic doesn't set bundleIdentifier in Now Playing API,
+    // so we skip that check. If Spotify is also playing, the priority
+    // logic in index.ts ensures Spotify wins (it's first in the list).
     const [title, artist, album, duration, elapsed, rate] = await Promise.all([
       run('nowplaying-cli get title').catch(() => ''),
       run('nowplaying-cli get artist').catch(() => ''),
