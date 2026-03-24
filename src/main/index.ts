@@ -47,7 +47,8 @@ async function createWindow(): Promise<void> {
 
   const webServer = new WebBroadcastServer()
   const staticDir = join(__dirname, '../renderer')
-  webServer.start(cfg.webPort, staticDir)
+  const devProxyUrl = process.env.NODE_ENV === 'development' ? process.env.ELECTRON_RENDERER_URL : undefined
+  webServer.start(cfg.webPort, staticDir, devProxyUrl)
 
   registerIpcHandlers(win, poller, lyricsService, themeManager, config, webServer)
 
