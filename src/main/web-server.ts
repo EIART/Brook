@@ -20,11 +20,22 @@ const MIME: Record<string, string> = {
 
 const DATA_WS_PATH = '/brook-ws'
 
+// Channels whose last value should be replayed to newly-connected clients
+const REPLAY_CHANNELS = new Set([
+  'playback:update',
+  'lyrics:loaded',
+  'lyrics:not-found',
+  'candidates:loaded',
+  'theme:changed',
+  'theme:list',
+])
+
 export class WebBroadcastServer {
   private wss: WebSocketServer | null = null
   private httpServer: ReturnType<typeof createServer> | null = null
   private readonly clients = new Set<WebSocket>()
   private readonly invokeHandlers = new Map<string, (data: unknown) => Promise<unknown>>()
+  private readonly lastState = new Map<string, unknown>()
   private devProxyUrl: string | null = null
 
   start(port: number, staticDir: string, devProxyUrl?: string): void {
@@ -42,6 +53,10 @@ export class WebBroadcastServer {
     this.wss = new WebSocketServer({ noServer: true })
     this.wss.on('connection', (ws) => {
       this.clients.add(ws)
+      // Replay last known state so the new client is immediately up-to-date
+      for (const [channel, data] of this.lastState) {
+        ws.send(JSON.stringify({ type: 'push', channel, data }))
+      }
       ws.on('close', () => this.clients.delete(ws))
       ws.on('message', (raw) => this._handleMessage(ws, raw.toString()))
     })
@@ -73,6 +88,9 @@ export class WebBroadcastServer {
   }
 
   broadcast(channel: string, data: unknown): void {
+    if (REPLAY_CHANNELS.has(channel)) {
+      this.lastState.set(channel, data)
+    }
     const msg = JSON.stringify({ type: 'push', channel, data })
     for (const ws of this.clients) {
       if (ws.readyState === WebSocket.OPEN) ws.send(msg)
