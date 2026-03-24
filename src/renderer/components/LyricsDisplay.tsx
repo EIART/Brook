@@ -1,7 +1,7 @@
 import type { LyricsLine, TrackInfo, ThemeContainer } from '../../shared/types'
 
-const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
-const DUR  = '380ms'
+const EASE = 'var(--theme-transition-easing, cubic-bezier(0.16, 1, 0.3, 1))'
+const DUR  = 'var(--theme-transition-duration, 380ms)'
 const transition = `opacity ${DUR} ${EASE}, font-size ${DUR} ${EASE}, filter ${DUR} ${EASE}`
 
 interface Props {
@@ -66,8 +66,8 @@ export function LyricsDisplay({
         className="text-center w-full"
         style={{
           fontSize: 'clamp(16px, 2.4vw, 26px)',
-          fontWeight: 300,
-          color: 'rgba(255,255,255,0.28)',
+          fontWeight: 'var(--theme-context-weight, 300)' as React.CSSProperties['fontWeight'],
+          color: 'var(--theme-context-color, rgba(255,255,255,0.28))',
           transition,
         }}
       >
@@ -81,11 +81,11 @@ export function LyricsDisplay({
         className="text-center w-full lyric-current-enter"
         style={{
           fontSize: 'clamp(34px, 5.2vw, 60px)',
-          fontWeight: 600,
-          color: '#fff',
+          fontWeight: 'var(--theme-current-weight, 600)' as React.CSSProperties['fontWeight'],
+          color: 'var(--theme-current-color, #fff)',
           lineHeight: 1.15,
           letterSpacing: '-0.03em',
-          textShadow: '0 0 40px rgba(255,255,255,0.25)',
+          textShadow: 'var(--theme-current-glow, 0 0 40px rgba(255,255,255,0.25))',
           padding: '8px 0',
         }}
       >
@@ -99,9 +99,9 @@ export function LyricsDisplay({
           className="text-center w-full"
           style={{
             fontSize: 'clamp(15px, 2.2vw, 24px)',
-            fontWeight: 300,
-            color: 'rgba(255,255,255,0.35)',
-            fontStyle: 'italic',
+            fontWeight: 'var(--theme-trans-weight, 300)' as React.CSSProperties['fontWeight'],
+            color: 'var(--theme-trans-color, rgba(255,255,255,0.35))',
+            fontStyle: 'var(--theme-trans-style, italic)' as React.CSSProperties['fontStyle'],
             transition,
           }}
         >
@@ -115,8 +115,8 @@ export function LyricsDisplay({
         className="text-center w-full"
         style={{
           fontSize: 'clamp(16px, 2.4vw, 26px)',
-          fontWeight: 300,
-          color: 'rgba(255,255,255,0.18)',
+          fontWeight: 'var(--theme-context-weight, 300)' as React.CSSProperties['fontWeight'],
+          color: 'var(--theme-context-color, rgba(255,255,255,0.18))',
           filter: 'blur(0.5px)',
           transition,
         }}
