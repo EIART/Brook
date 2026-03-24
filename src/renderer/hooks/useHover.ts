@@ -24,5 +24,7 @@ export function useHover(fadeDelay = 2000, enterDelay = 300) {
     fadeTimerRef.current = setTimeout(() => setVisible(false), fadeDelay)
   }, [fadeDelay])
 
-  return { visible, onEnter, onLeave }
+  const toggle = useCallback(() => setVisible(v => !v), [])
+
+  return { visible, onEnter, onLeave, toggle }
 }

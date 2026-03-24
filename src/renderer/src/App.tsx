@@ -36,7 +36,7 @@ export default function App() {
   const linesRef = useRef(lines)
   linesRef.current = lines
 
-  const { visible: controlsVisible, onEnter, onLeave } = useHover(0, 0)
+  const { visible: controlsVisible, onEnter, onLeave, toggle: toggleControls } = useHover(0, 0)
 
   // Load initial config
   useEffect(() => {
@@ -150,6 +150,7 @@ export default function App() {
       style={{ background: 'var(--theme-bg-gradient, var(--theme-bg-color, #000))' }}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
+      onTouchEnd={toggleControls}
     >
       {/* Album art background layer */}
       {activeTheme?.background.type === 'album-art' && (

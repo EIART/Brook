@@ -76,6 +76,7 @@ export function ControlBar({ visible, track, position, onTheme, onTranslation, o
           <button
             key={key}
             onClick={action}
+            onTouchEnd={e => e.stopPropagation()}
             className="flex flex-col items-center"
             style={{ gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
