@@ -21,7 +21,8 @@ async function createWindow(): Promise<void> {
   const win = new BrowserWindow({
     x, y, width, height,
     fullscreen: true,
-    frame: false,
+    fullscreenable: true,
+    frame: true,
     transparent: false,
     backgroundColor: '#000000',
     webPreferences: {
