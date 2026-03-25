@@ -7,6 +7,8 @@
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
+    "generate:icons": "node scripts/generate-icons.mjs",
+    "prebuild": "npm run generate:icons",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
@@ -21,11 +23,28 @@
     "test": "vitest run",
     "test:ui": "vitest --ui"
   },
+  "build": {
+    "directories": {
+      "buildResources": "build-assets"
+    },
+    "mac": {
+      "icon": "build-assets/logo/icon.icns"
+    },
+    "win": {
+      "icon": "build-assets/logo/icon.ico"
+    },
+    "linux": {
+      "icon": "build-assets/logo/icon-512.png"
+    }
+  },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "electron-updater": "^6.3.9",
     "ws": "^8.20.0"
+  },
+  "overrides": {
+    "sharp": "0.33.5"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",
@@ -45,10 +64,13 @@
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
     "eslint": "^9.15.0",
+    "icon-gen": "^5.0.0",
     "jsdom": "^25.0.1",
+    "pngjs": "^7.0.0",
     "prettier": "^3.4.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "sharp": "0.33.5",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.2",
     "vite": "^5.4.0",
