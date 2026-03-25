@@ -24,15 +24,16 @@ describe('Capsule', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('renders artwork img when artworkUrl is present', () => {
+  it('does not render artwork img when artworkUrl is present', () => {
     render(<Capsule track={track} />)
-    const img = screen.getByRole('img')
-    expect(img).toHaveAttribute('src', 'https://example.com/art.jpg')
+    expect(screen.queryByRole('img')).toBeNull()
   })
 
-  it('renders placeholder div when artworkUrl is absent', () => {
+  it('still renders text content when artworkUrl is absent', () => {
     const trackNoArt: TrackInfo = { ...track, artworkUrl: undefined }
-    const { queryByRole } = render(<Capsule track={trackNoArt} />)
-    expect(queryByRole('img')).toBeNull()
+    render(<Capsule track={trackNoArt} />)
+    expect(screen.getByText('Dust in the Wind')).toBeInTheDocument()
+    expect(screen.getByText('Kansas')).toBeInTheDocument()
+    expect(screen.queryByRole('img')).toBeNull()
   })
 })
