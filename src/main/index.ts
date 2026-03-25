@@ -11,26 +11,13 @@ import { ThemeManager } from './theme-manager'
 import { Config } from './config'
 import { registerIpcHandlers } from './ipc-bridge'
 import { WebBroadcastServer } from './web-server'
+import { createMainWindow } from './window-options'
 
 async function createWindow(): Promise<void> {
   // Target the non-primary display if available
   const displays = screen.getAllDisplays()
-  const target = displays.find(d => d.id !== screen.getPrimaryDisplay().id) ?? displays[0]
-  const { x, y, width, height } = target.bounds
-
-  const win = new BrowserWindow({
-    x, y, width, height,
-    fullscreen: true,
-    fullscreenable: true,
-    frame: true,
-    transparent: false,
-    backgroundColor: '#000000',
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
-  })
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const win = createMainWindow(BrowserWindow, displays, primaryDisplay)
 
   const userDataPath = app.getPath('userData')
   const config = new Config(join(userDataPath, 'config.json'))
